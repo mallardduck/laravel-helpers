@@ -1294,7 +1294,7 @@ if ( ! function_exists('forget'))
     }
 }
 
-if (! function_exists('bcrypt')) {
+if (! function_exists('bcrypt') && ! function_exists('bcrypt_hash')) {
     /**
      * Password hash the given value.
      *
@@ -1308,13 +1308,23 @@ if (! function_exists('bcrypt')) {
     {
         $cost = isset($options['rounds']) ? $options['rounds'] : 10;
 
-        $hashedValue = password_hash($value, PASSWORD_BCRYPT, ['cost' => $cost]);
+        $hashedValue = bcrypt_hash($value, PASSWORD_BCRYPT, ['cost' => $cost]);
 
         if ($hashedValue === false) {
             throw new RuntimeException('Bcrypt hashing not supported.');
         }
 
         return $hashedValue;
+    }
+
+    function bcrypt_hash($value, $options = [])
+    {
+        $size = mcrypt_get_iv_size(MCRYPT_BLOWFISH, MCRYPT_MODE_CFB);
+        $salt = mcrypt_create_iv($size, MCRYPT_DEV_URANDOM);
+        $salt = base64_encode($salt);
+        $salt = str_replace('+', '.', $salt);
+        $hash = crypt($value, '$2y$10$' . $salt . '$');
+        return $hash;
     }
 }
 
@@ -1346,7 +1356,7 @@ if (! function_exists('dd')) {
         array_map(function($x) {
             var_dump($x);
         }, func_get_args());
-        
+
         die(1);
     }
 }
