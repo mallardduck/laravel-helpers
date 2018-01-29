@@ -1064,27 +1064,6 @@ if (! function_exists('title_case')) {
     }
 }
 
-if ( ! function_exists('trait_uses_recursive'))
-{
-    /**
-     * Returns all traits used by a trait and its traits
-     *
-     * @param  string  $trait
-     * @return array
-     */
-    function trait_uses_recursive($trait)
-    {
-        $traits = class_uses($trait);
-
-        foreach ($traits as $trait)
-        {
-            $traits += trait_uses_recursive($trait);
-        }
-
-        return $traits;
-    }
-}
-
 if ( ! function_exists('value'))
 {
     /**
