@@ -213,8 +213,11 @@ if ( ! function_exists('array_flatten'))
     function array_flatten($array)
     {
         $return = array();
+        function _array_flattener($value,$key,&$return) {
+            $return[] = $x;
+        }
 
-        array_walk_recursive($array, function($x) use (&$return) { $return[] = $x; });
+        array_walk_recursive($array, "_array_flattener", $return);
 
         return $return;
     }
@@ -449,6 +452,7 @@ if ( ! function_exists('array_where'))
 
 if ( ! function_exists('camel_case'))
 {
+
     /**
      * Convert a value to camel case.
      *
@@ -459,12 +463,19 @@ if ( ! function_exists('camel_case'))
     {
         static $camelCache = array();
 
+        function _lcfirst($string) {
+            $org_first = $string[0];
+            $uc_first = strtolower($org_first);
+            $string[0] = $uc_first;
+            return $string;
+        }
+
         if (isset($camelCache[$value]))
         {
             return $camelCache[$value];
         }
 
-        return $camelCache[$value] = lcfirst(studly($value));
+        return $camelCache[$value] = _lcfirst(studly($value));
     }
 }
 
@@ -568,7 +579,7 @@ if ( ! function_exists('e'))
      */
     function e($value)
     {
-        return htmlentities($value, ENT_QUOTES, 'UTF-8', false);
+        return htmlentities($value, ENT_QUOTES, 'UTF-8');
     }
 }
 
@@ -660,11 +671,11 @@ if ( ! function_exists('preg_replace_sub'))
      */
     function preg_replace_sub($pattern, &$replacements, $subject)
     {
-        return preg_replace_callback($pattern, function() use (&$replacements)
-        {
+        function _array_shift(&$replacements) {
             return array_shift($replacements);
+        }
 
-        }, $subject);
+        return preg_replace_callback($pattern, "_array_shift", $subject);
     }
 }
 
@@ -812,7 +823,7 @@ if ( ! function_exists('str_random'))
             throw new RuntimeException('OpenSSL extension is required.');
         }
 
-        $bytes = openssl_random_pseudo_bytes($length * 2);
+        $bytes = decbin(rand(0,($length * 2)));
 
         if ($bytes === false)
         {
@@ -1332,9 +1343,10 @@ if (! function_exists('dd')) {
      */
     function dd()
     {
-        array_map(function($x) {
+        function dumper($x) {
             var_dump($x);
-        }, func_get_args());
+        }
+        array_map("dumper", func_get_args());
 
         die(1);
     }
